@@ -2,6 +2,21 @@ import { supabase } from '../lib/supabase';
 import { JobPosting, Applicant, EmailTemplate } from '../types';
 
 class SupabaseService {
+  // Test connection on first use
+  private async testConnection() {
+    try {
+      const { error } = await supabase.from('jobs').select('count').limit(1);
+      if (error) {
+        console.error('Supabase connection failed:', error);
+        return false;
+      }
+      console.log('Supabase connection successful');
+      return true;
+    } catch (err) {
+      console.error('Supabase connection error:', err);
+      return false;
+    }
+  }
   // Job Management
   async getJobs(): Promise<JobPosting[]> {
     try {
@@ -69,21 +84,30 @@ class SupabaseService {
 
   async createJob(jobData: Partial<JobPosting>): Promise<JobPosting> {
     try {
+      console.log('Creating job with data:', jobData);
+      
+      const insertData = {
+        title: jobData.title!,
+        department: jobData.department!,
+        location: jobData.location!,
+        job_type: jobData.jobType || 'fullTime',
+        description: jobData.description!,
+        attachments: jobData.attachments || [],
+        is_public: jobData.isPublic ?? true
+      };
+      
+      console.log('Insert data:', insertData);
+      
       const { data, error } = await supabase
         .from('jobs')
-        .insert({
-          title: jobData.title!,
-          department: jobData.department!,
-          location: jobData.location!,
-          job_type: jobData.jobType || 'fullTime',
-          description: jobData.description!,
-          attachments: jobData.attachments || [],
-          is_public: jobData.isPublic ?? true
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       return {
         id: data.id,

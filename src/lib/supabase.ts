@@ -2,10 +2,25 @@ import { createClient } from '@supabase/supabase-js'
 
 // Supabase project configuration
 const supabaseUrl = 'https://nazicfjzdhnvddgjgaxg.supabase.co'
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || ''
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
+
+// Validate environment variables
+if (!supabaseAnonKey) {
+  console.error('Missing REACT_APP_SUPABASE_ANON_KEY environment variable');
+  console.error('Please check your .env file and restart the development server');
+}
+
+// Debug logging (only in development)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Supabase config:', {
+    url: supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    keyLength: supabaseAnonKey?.length || 0
+  });
+}
 
 // Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey || '')
 
 // Database types (auto-generated based on our schema)
 export interface Database {
