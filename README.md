@@ -1,46 +1,169 @@
-# Getting Started with Create React App
+# HR 履歷管理系統
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+這是一個基於 React + TypeScript 開發的HR履歷管理系統，幫助人力資源部門管理職缺、處理應徵者履歷，並透過AI輔助進行履歷篩選。
 
-## Available Scripts
+## 🚀 功能特色
 
-In the project directory, you can run:
+### 1. HR 登入與職缺管理
+- HR 專用登入系統
+- 職缺列表瀏覽（職缺名稱、部門、狀態、應徵人數）
+- 新增、編輯、刪除職缺功能
+- 職缺詳情管理
+
+### 2. 智能履歷篩選
+- 設定職缺篩選條件（年資、學歷、技能關鍵字、語言能力）
+- AI 自動評分履歷匹配度
+- 生成履歷摘要和分析報告
+
+### 3. 應徵者管理
+- 履歷上傳功能（支援 PDF, DOC, DOCX）
+- 應徵者列表管理
+- 狀態篩選（待審核、已審核、已選中、已拒絕）
+- 批量選擇應徵者
+
+### 4. 信件系統
+- 信件模板管理
+- 感謝信批量發送
+- 支援變數替換（姓名、職缺名稱等）
+- 發送記錄追蹤
+
+## 🛠️ 技術架構
+
+- **前端框架**: React 18 + TypeScript
+- **路由管理**: React Router v6
+- **狀態管理**: React Hooks (useState, useEffect)
+- **樣式設計**: CSS3 (Flexbox, Grid)
+- **HTTP 請求**: Axios
+- **開發工具**: Create React App
+
+## 📦 快速開始
+
+### 前置需求
+- Node.js (版本 16 或以上)
+- npm 或 yarn
+
+### 安裝與執行
+
+1. 安裝依賴套件
+```bash
+npm install
+```
+
+2. 啟動開發伺服器
+```bash
+npm start
+```
+
+3. 在瀏覽器中開啟 [http://localhost:3000](http://localhost:3000)
+
+### 測試帳號
+- 帳號: `hr`
+- 密碼: `password`
+
+## 📋 使用指南
+
+### 1. 登入系統
+使用提供的測試帳號登入系統
+
+### 2. 管理職缺
+- 點擊「新增職缺」建立新的工作機會
+- 填寫職缺資訊：名稱、部門、地點、工作性質、說明等
+- 設定是否公開職缺
+
+### 3. 設定篩選條件
+- 進入職缺詳情頁面
+- 點擊「篩選設定」
+- 設定年資範圍、學歷要求、技能關鍵字等條件
+
+### 4. 上傳履歷
+- 選擇指定職缺
+- 點擊「上傳履歷」
+- 填寫基本資訊並上傳履歷檔案
+- 系統自動進行 AI 分析評分
+
+### 5. 管理應徵者
+- 在職缺詳情頁查看應徵者列表
+- 檢視 AI 評分和摘要
+- 使用狀態篩選功能
+- 勾選要發送感謝信的應徵者
+
+### 6. 信件模板管理
+- 進入「信件模板」頁面
+- 新增、編輯信件模板
+- 使用變數（如 {{applicantName}}, {{jobTitle}}）
+- 選擇模板發送感謝信
+
+## 🎯 系統功能對應
+
+| Use Case | 功能描述 | 對應頁面 |
+|----------|---------|---------|
+| UC1 | HR 瀏覽職缺與應徵者 | `/jobs`, `/jobs/:id` |
+| UC2 | HR 新增或編輯 JD | `/jobs/new`, `/jobs/:id/edit` |
+| UC3 | 設定職缺篩選條件 | `/jobs/:id/filter` |
+| UC4 | 上傳履歷至指定職缺 | `/jobs/:id/upload` |
+| UC5 | AI 履歷評分與問答 | 自動處理（後端整合） |
+| UC6 | HR 勾選履歷準備寄信 | `/jobs/:id` |
+| UC7 | 產生與寄送感謝信 | `/jobs/:id` |
+| UC8 | HR 管理信件模板 | `/templates` |
+
+## 📚 專案結構
+
+```
+src/
+├── components/          # 共用組件
+│   └── Layout.tsx      # 主要佈局組件
+├── pages/              # 頁面組件
+│   ├── LoginPage.tsx   # 登入頁面
+│   ├── JobListPage.tsx # 職缺列表
+│   ├── JobDetailPage.tsx # 職缺詳情
+│   ├── JobFormPage.tsx # 職缺表單
+│   ├── FilterSettingPage.tsx # 篩選設定
+│   ├── ResumeUploadPage.tsx # 履歷上傳
+│   └── EmailTemplatePage.tsx # 信件模板
+├── types/              # TypeScript 類型定義
+│   └── index.ts        # 主要類型定義
+├── App.tsx            # 主應用組件
+├── App.css            # 主樣式檔案
+└── index.tsx          # 應用入口點
+```
+
+## 🔧 開發腳本
 
 ### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+啟動開發伺服器，自動重載頁面
 
 ### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+執行測試套件
 
 ### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+建置生產版本
 
 ### `npm run eject`
+彈出 Create React App 配置（不建議）
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 🚧 後續開發建議
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 後端整合
+- 建立 REST API 或 GraphQL 端點
+- 實作真實的使用者認證系統
+- 整合檔案上傳和 AI 分析服務
+- 設定 SMTP 服務發送信件
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### 功能增強
+- 加入單元測試和 E2E 測試
+- 實作 PWA 功能
+- 加入更多 AI 分析選項
+- 支援多語言介面
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### 效能優化
+- 實作虛擬滾動處理大量資料
+- 加入快取策略
+- 優化圖片和檔案載入
 
-## Learn More
+## 📞 技術支援
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+如有任何問題或建議，請聯絡開發團隊。
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
+
+**Note**: 此為 POC 版本，使用 Mock 資料模擬後端功能。正式環境需要整合真實的後端服務。

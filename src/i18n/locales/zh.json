@@ -1,0 +1,252 @@
+{
+  "common": {
+    "save": "儲存",
+    "cancel": "取消",
+    "delete": "刪除",
+    "edit": "編輯",
+    "view": "查看",
+    "search": "搜尋",
+    "filter": "篩選",
+    "sort": "排序",
+    "clear": "清除",
+    "loading": "載入中...",
+    "confirm": "確認",
+    "success": "成功",
+    "error": "錯誤",
+    "warning": "警告",
+    "required": "必填",
+    "optional": "選填",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "submit": "提交",
+    "reset": "重設",
+    "saving": "保存中..."
+  },
+  "auth": {
+    "login": "登入",
+    "logout": "登出",
+    "username": "使用者名稱",
+    "password": "密碼",
+    "loginTitle": "HR 履歷管理系統",
+    "loginButton": "登入",
+    "loggingIn": "登入中...",
+    "loginError": "帳號或密碼錯誤",
+    "loginFailed": "登入失敗",
+    "demoAccount": "測試帳號",
+    "demoPassword": "測試密碼"
+  },
+  "navigation": {
+    "jobManagement": "職缺管理",
+    "emailTemplates": "信件模板",
+    "dashboard": "儀表板"
+  },
+  "jobs": {
+    "title": "職缺管理",
+    "addJob": "新增職缺",
+    "editJob": "編輯職缺",
+    "jobList": "職缺列表",
+    "jobDetails": "職缺詳情",
+    "jobName": "職缺名稱",
+    "department": "部門",
+    "location": "地點",
+    "jobType": "工作性質",
+    "description": "說明文字",
+    "status": "狀態",
+    "applicantCount": "應徵人數",
+    "actions": "操作",
+    "public": "公開",
+    "private": "不公開",
+    "isPublic": "公開職缺",
+    "isPublicHelper": "允許外部應徵者查看",
+    "attachments": "附檔",
+    "attachmentsHelper": "可上傳 PDF, DOC, DOCX 格式檔案",
+    "deleteConfirm": "確定要刪除這個職缺嗎？",
+    "deleteSuccess": "職缺已刪除",
+    "deleteFailed": "刪除失敗",
+    "createSuccess": "職缺已建立",
+    "createFailed": "建立失敗",
+    "updateSuccess": "職缺已更新",
+    "updateFailed": "更新失敗",
+    "loadFailed": "載入職缺失敗",
+    "notFound": "找不到職缺資料",
+    "noJobs": "尚無職缺",
+    "createFirst": "立即新增",
+    "jobTypes": {
+      "fullTime": "全職",
+      "partTime": "兼職",
+      "contract": "契約",
+      "internship": "實習"
+    },
+    "updating": "更新中...",
+    "creating": "建立中...",
+    "updateJob": "更新職缺",
+    "createJob": "建立職缺"
+  },
+  "filters": {
+    "quickFilters": "快速篩選",
+    "searchPlaceholder": "搜尋職缺名稱、部門、地點...",
+    "allDepartments": "全部部門",
+    "allStatus": "全部狀態",
+    "hasApplicants": "有應徵者",
+    "noApplicants": "無應徵者",
+    "sortBy": "排序方式",
+    "newest": "最新建立",
+    "oldest": "最早建立",
+    "byTitle": "職缺名稱",
+    "byApplicants": "應徵人數",
+    "clearFilters": "清除篩選",
+    "showingResults": "顯示 {{count}} / {{total}} 個職缺",
+    "noResults": "沒有符合篩選條件的職缺",
+    "clearToSeeAll": "清除篩選條件",
+    "saveSuccess": "篩選條件已保存",
+    "settings": "篩選條件設定",
+    "saveSettings": "保存篩選條件",
+    "info": {
+      "title": "說明",
+      "description": "設定的篩選條件將用於自動評估後續上傳的履歷，AI 會根據這些條件對應徵者進行評分和分析。"
+    }
+  },
+  "applicants": {
+    "title": "應徵者列表",
+    "name": "姓名",
+    "email": "Email",
+    "uploadTime": "上傳時間",
+    "aiScore": "AI評分",
+    "reviewStatus": "審核狀態",
+    "actions": "操作",
+    "viewResume": "查看履歷",
+    "aiSummary": "AI摘要",
+    "selectAll": "全選",
+    "selectedCount": "已選擇 {{count}} 位應徵者",
+    "sendEmail": "發送感謝信",
+    "noApplicants": "目前沒有應徵者",
+    "uploadFirst": "上傳第一份履歷",
+    "noResults": "沒有符合篩選條件的應徵者",
+    "searchApplicants": "搜尋姓名、Email、AI摘要...",
+    "showingApplicants": "顯示 {{count}} / {{total}} 位應徵者",
+    "statusUpdate": {
+      "success": "狀態已更新",
+      "failed": "更新狀態失敗"
+    },
+    "status": {
+      "pending": "待審核",
+      "reviewed": "已審核",
+      "selected": "已選中",
+      "rejected": "已拒絕"
+    },
+    "aiScoreFilter": {
+      "all": "全部評分",
+      "high": "高分 (80+)",
+      "medium": "中分 (60-79)",
+      "low": "低分 (<60)",
+      "noScore": "未評分"
+    },
+    "emailStatus": {
+      "title": "信件狀態",
+      "all": "全部",
+      "sent": "已發送",
+      "notSent": "未發送"
+    },
+    "sortOptions": {
+      "newest": "最新上傳",
+      "oldest": "最早上傳",
+      "name": "姓名 A-Z",
+      "scoreHigh": "評分高到低",
+      "scoreLow": "評分低到高"
+    },
+    "selectFirst": "請選擇要發送信件的應徵者",
+    "prepareEmail": "準備發送信件給 {{count}} 位應徵者",
+    "showingResults": "顯示 {{count}} / {{total}} 位應徵者",
+    "selectedActions": "已選擇 {{count}} 位應徵者",
+    "sendThankYou": "發送感謝信",
+    "tableHeaders": {
+      "name": "姓名",
+      "uploadTime": "上傳時間",
+      "aiScore": "AI評分",
+      "reviewStatus": "審核狀態",
+      "actions": "操作"
+    },
+    "noScore": "未評分",
+    "clearFilters": "清除篩選條件"
+  },
+  "resumeUpload": {
+    "title": "上傳履歷",
+    "basicInfo": "基本資訊",
+    "resumeFile": "履歷檔案",
+    "supportedFormats": "支援格式: PDF, DOC, DOCX",
+    "fileSizeLimit": "檔案大小限制: 5MB",
+    "fileTypeError": "僅支援 PDF, DOC, DOCX 格式",
+    "fileSizeError": "檔案大小不能超過 5MB",
+    "selectFile": "請選擇履歷檔案",
+    "uploading": "上傳中...",
+    "uploadResume": "上傳履歷",
+    "uploadSuccess": "履歷上傳成功！AI 評分: {{score}}分",
+    "uploadFailed": "上傳失敗，請稍後重試",
+    "processing": "正在處理您的履歷...",
+    "processSteps": {
+      "upload": "檔案上傳",
+      "analyzing": "AI 分析中",
+      "complete": "完成"
+    },
+    "uploadInfo": {
+      "title": "上傳說明",
+      "items": [
+        "系統會自動使用 AI 分析您的履歷",
+        "分析結果包含匹配度評分和摘要",
+        "HR 會收到通知並審核您的申請",
+        "請確保履歷內容完整且格式正確"
+      ]
+    }
+  },
+  "emailTemplates": {
+    "title": "信件模板管理",
+    "addTemplate": "新增模板",
+    "editTemplate": "編輯模板",
+    "templateName": "模板名稱",
+    "purpose": "用途",
+    "subject": "信件主旨",
+    "content": "信件內容",
+    "lastModified": "最後修改時間",
+    "createSuccess": "模板已建立",
+    "updateSuccess": "模板已更新",
+    "deleteSuccess": "模板已刪除",
+    "operationFailed": "操作失敗",
+    "deleteConfirm": "確定要刪除這個模板嗎？",
+    "noTemplates": "尚無信件模板",
+    "createFirst": "立即新增",
+    "purposes": {
+      "general": "一般感謝信",
+      "interview": "邀請面試",
+      "offer": "錄取通知",
+      "rejection": "婉謝信"
+    },
+    "variables": {
+      "title": "可用變數",
+      "applicantName": "應徵者姓名",
+      "jobTitle": "職缺名稱",
+      "companyName": "公司名稱",
+      "interviewTime": "面試時間",
+      "interviewLocation": "面試地點"
+    },
+    "updateTemplate": "更新模板",
+    "createTemplate": "建立模板"
+  },
+  "language": {
+    "switch": "語言切換",
+    "chinese": "繁體中文",
+    "english": "English"
+  },
+  "email": {
+    "sendInterview": "發送面試邀請",
+    "sendRejection": "發送拒絕信",
+    "interview": "面試",
+    "reject": "拒絕",
+    "generating": "AI 正在生成信件內容...",
+    "regenerate": "重新生成",
+    "send": "發送信件",
+    "sending": "發送中...",
+    "sentSuccess": "信件已成功發送",
+    "sendFailed": "信件發送失敗"
+  }
+}
