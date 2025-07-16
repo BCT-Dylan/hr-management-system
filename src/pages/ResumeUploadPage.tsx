@@ -219,7 +219,7 @@ const ResumeUploadPage: React.FC = () => {
       <div className="info-box">
         <h4>📋 {t('resumeUpload.uploadInfo.title')}</h4>
         <ul>
-          {t('resumeUpload.uploadInfo.items', { returnObjects: true }).map((item: string, index: number) => (
+          {(t('resumeUpload.uploadInfo.items', { returnObjects: true }) as string[]).map((item: string, index: number) => (
             <li key={index}>{item}</li>
           ))}
         </ul>
