@@ -1,6 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  IconButton,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Checkbox,
+  Card,
+  CardContent,
+  Tooltip,
+  Avatar,
+  Breadcrumbs,
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Upload as UploadIcon,
+  Person as PersonIcon,
+  Email as EmailIcon,
+  Visibility as ViewIcon,
+  Psychology as AIIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  CheckCircle as InterviewIcon,
+  Cancel as RejectIcon,
+} from '@mui/icons-material';
 import { JobPosting, Applicant } from '../types';
 import { supabaseService } from '../services/supabaseService';
 import EmailModal from '../components/EmailModal';
@@ -208,223 +246,348 @@ const JobDetailPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="loading">{t('common.loading')}</div>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (!job) {
-    return <div className="error">{t('jobs.notFound')}</div>;
+    return (
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          {t('jobs.notFound')}
+        </Typography>
+        <Button component={Link} to="/jobs" sx={{ mt: 2 }}>
+          {t('common.back')} {t('jobs.jobList')}
+        </Button>
+      </Paper>
+    );
   }
 
   const filteredApplicants = getFilteredApplicants();
 
   return (
-    <div className="job-detail-page">
-      <div className="page-header">
-        <Link to="/jobs" className="back-link">← {t('common.back')} {t('jobs.jobList')}</Link>
-        <h1>{job.title}</h1>
-        <div className="job-info">
-          <span>{t('jobs.department')}: {job.department}</span>
-          <span>{t('jobs.location')}: {job.location}</span>
-          <span>{t('jobs.applicantCount')}: {job.applicantCount}</span>
-        </div>
-      </div>
+    <Box>
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Button
+          component={Link}
+          to="/jobs"
+          startIcon={<ArrowBackIcon />}
+          color="inherit"
+        >
+          {t('jobs.jobList')}
+        </Button>
+        <Typography color="text.primary">{job.title}</Typography>
+      </Breadcrumbs>
 
-      <div className="job-actions">
-        <Link to={`/jobs/${job.id}/upload`} className="btn btn-primary">
-          {t('resumeUpload.title')}
-        </Link>
-      </div>
-
-      <div className="applicants-section">
-        <div className="section-header">
-          <h2>{t('applicants.title')}</h2>
-        </div>
-
-        {/* Quick Filters for Applicants */}
-        <div className="applicant-filters">
-          <div className="filter-row">
-            <div className="filter-group">
-              <input
-                type="text"
-                placeholder={t('applicants.searchApplicants')}
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="search-input"
+      {/* Job Header */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              {job.title}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Chip label={`${t('jobs.department')}: ${job.department}`} variant="outlined" />
+              <Chip label={`${t('jobs.location')}: ${job.location}`} variant="outlined" />
+              <Chip 
+                label={`${t('jobs.applicantCount')}: ${job.applicantCount}`} 
+                color="primary"
+                icon={<PersonIcon />}
               />
-            </div>
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            component={Link}
+            to={`/jobs/${job.id}/upload`}
+            startIcon={<UploadIcon />}
+          >
+            {t('resumeUpload.title')}
+          </Button>
+        </Box>
+      </Paper>
 
-            <div className="filter-group">
-              <label>{t('applicants.reviewStatus')}</label>
-              <select
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">{t('applicants.status.all', '全部狀態')}</option>
-                <option value="pending">{t('applicants.status.pending')}</option>
-                <option value="reviewed">{t('applicants.status.reviewed')}</option>
-                <option value="selected">{t('applicants.status.selected')}</option>
-                <option value="rejected">{t('applicants.status.rejected')}</option>
-              </select>
-            </div>
+      {/* Applicants Section */}
+      <Paper sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <PersonIcon sx={{ mr: 1 }} />
+          <Typography variant="h5" component="h2">
+            {t('applicants.title')}
+          </Typography>
+        </Box>
 
-            <div className="filter-group">
-              <label>{t('applicants.aiScore')}</label>
-              <select
-                value={filters.aiScore}
-                onChange={(e) => handleFilterChange('aiScore', e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">{t('applicants.aiScoreFilter.all')}</option>
-                <option value="high">{t('applicants.aiScoreFilter.high')}</option>
-                <option value="medium">{t('applicants.aiScoreFilter.medium')}</option>
-                <option value="low">{t('applicants.aiScoreFilter.low')}</option>
-                <option value="no-score">{t('applicants.aiScoreFilter.noScore')}</option>
-              </select>
-            </div>
+        {/* Filters */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <FilterIcon sx={{ mr: 1 }} />
+              <Typography variant="h6">篩選器</Typography>
+            </Box>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', md: 'row' }, 
+              gap: 2, 
+              alignItems: { xs: 'stretch', md: 'center' } 
+            }}>
+              <Box sx={{ flex: 1, minWidth: 200 }}>
+                <TextField
+                  fullWidth
+                  placeholder={t('applicants.searchApplicants')}
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  InputProps={{
+                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                  }}
+                  size="small"
+                />
+              </Box>
 
-            <div className="filter-group">
-              <label>{t('applicants.emailStatus.title', '信件狀態')}</label>
-              <select
-                value={filters.emailSent}
-                onChange={(e) => handleFilterChange('emailSent', e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">{t('applicants.emailStatus.all')}</option>
-                <option value="sent">{t('applicants.emailStatus.sent')}</option>
-                <option value="not-sent">{t('applicants.emailStatus.notSent')}</option>
-              </select>
-            </div>
+              <Box sx={{ minWidth: 150 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t('applicants.reviewStatus')}</InputLabel>
+                  <Select
+                    value={filters.status}
+                    label={t('applicants.reviewStatus')}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                  >
+                    <MenuItem value="all">{t('applicants.status.all', '全部狀態')}</MenuItem>
+                    <MenuItem value="pending">{t('applicants.status.pending')}</MenuItem>
+                    <MenuItem value="reviewed">{t('applicants.status.reviewed')}</MenuItem>
+                    <MenuItem value="selected">{t('applicants.status.selected')}</MenuItem>
+                    <MenuItem value="rejected">{t('applicants.status.rejected')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
-            <div className="filter-group">
-              <label>{t('common.sort')}</label>
-              <select
-                value={filters.sortBy}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                className="filter-select"
-              >
-                <option value="newest">{t('applicants.sortOptions.newest')}</option>
-                <option value="oldest">{t('applicants.sortOptions.oldest')}</option>
-                <option value="name">{t('applicants.sortOptions.name')}</option>
-                <option value="score-high">{t('applicants.sortOptions.scoreHigh')}</option>
-                <option value="score-low">{t('applicants.sortOptions.scoreLow')}</option>
-              </select>
-            </div>
+              <Box sx={{ minWidth: 150 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t('applicants.aiScore')}</InputLabel>
+                  <Select
+                    value={filters.aiScore}
+                    label={t('applicants.aiScore')}
+                    onChange={(e) => handleFilterChange('aiScore', e.target.value)}
+                  >
+                    <MenuItem value="all">{t('applicants.aiScoreFilter.all')}</MenuItem>
+                    <MenuItem value="high">{t('applicants.aiScoreFilter.high')}</MenuItem>
+                    <MenuItem value="medium">{t('applicants.aiScoreFilter.medium')}</MenuItem>
+                    <MenuItem value="low">{t('applicants.aiScoreFilter.low')}</MenuItem>
+                    <MenuItem value="no-score">{t('applicants.aiScoreFilter.noScore')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
-            <button onClick={clearFilters} className="btn btn-secondary btn-sm">
-              {t('filters.clearFilters')}
-            </button>
-          </div>
+              <Box sx={{ minWidth: 150 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t('applicants.emailStatus.title', '信件狀態')}</InputLabel>
+                  <Select
+                    value={filters.emailSent}
+                    label={t('applicants.emailStatus.title', '信件狀態')}
+                    onChange={(e) => handleFilterChange('emailSent', e.target.value)}
+                  >
+                    <MenuItem value="all">{t('applicants.emailStatus.all')}</MenuItem>
+                    <MenuItem value="sent">{t('applicants.emailStatus.sent')}</MenuItem>
+                    <MenuItem value="not-sent">{t('applicants.emailStatus.notSent')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
 
-          <div className="filter-results">
-            <span className="results-count">
-              {t('applicants.showingResults', '顯示 {{count}} / {{total}} 位應徵者', { count: filteredApplicants.length, total: applicants.length })}
-            </span>
-          </div>
-        </div>
+              <Box sx={{ minWidth: 150 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t('common.sort')}</InputLabel>
+                  <Select
+                    value={filters.sortBy}
+                    label={t('common.sort')}
+                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                  >
+                    <MenuItem value="newest">{t('applicants.sortOptions.newest')}</MenuItem>
+                    <MenuItem value="oldest">{t('applicants.sortOptions.oldest')}</MenuItem>
+                    <MenuItem value="name">{t('applicants.sortOptions.name')}</MenuItem>
+                    <MenuItem value="score-high">{t('applicants.sortOptions.scoreHigh')}</MenuItem>
+                    <MenuItem value="score-low">{t('applicants.sortOptions.scoreLow')}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <Box sx={{ minWidth: 120 }}>
+                <Button onClick={clearFilters} variant="outlined" size="small" fullWidth>
+                  {t('filters.clearFilters')}
+                </Button>
+              </Box>
+            </Box>
+
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                {t('applicants.showingResults', '顯示 {{count}} / {{total}} 位應徵者', { count: filteredApplicants.length, total: applicants.length })}
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
 
         {selectedApplicants.length > 0 && (
-          <div className="selected-actions">
-            <span>{t('applicants.selectedActions', '已選擇 {{count}} 位應徵者', { count: selectedApplicants.length })}</span>
-            <button onClick={handleSendEmails} className="btn btn-primary">
-              {t('applicants.sendThankYou')}
-            </button>
-          </div>
+          <Card sx={{ mb: 2, bgcolor: 'action.selected' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body1">
+                  {t('applicants.selectedActions', '已選擇 {{count}} 位應徵者', { count: selectedApplicants.length })}
+                </Typography>
+                <Button 
+                  onClick={handleSendEmails} 
+                  variant="contained"
+                  startIcon={<EmailIcon />}
+                >
+                  {t('applicants.sendThankYou')}
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
         )}
 
-        <div className="applicants-table">
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  <input 
-                    type="checkbox" 
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
                     checked={filteredApplicants.length > 0 && filteredApplicants.every(app => selectedApplicants.includes(app.id))}
                     onChange={handleSelectAll}
+                    indeterminate={selectedApplicants.length > 0 && selectedApplicants.length < filteredApplicants.length}
                   />
-                </th>
-                <th>{t('applicants.tableHeaders.name')}</th>
-                <th>{t('applicants.tableHeaders.uploadTime')}</th>
-                <th>{t('applicants.tableHeaders.aiScore')}</th>
-                <th>{t('applicants.tableHeaders.reviewStatus')}</th>
-                <th>{t('applicants.tableHeaders.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableCell>
+                <TableCell>{t('applicants.tableHeaders.name')}</TableCell>
+                <TableCell>{t('applicants.tableHeaders.uploadTime')}</TableCell>
+                <TableCell align="center">{t('applicants.tableHeaders.aiScore')}</TableCell>
+                <TableCell>{t('applicants.tableHeaders.reviewStatus')}</TableCell>
+                <TableCell align="center">{t('applicants.tableHeaders.actions')}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {filteredApplicants.map(applicant => (
-                <tr key={applicant.id}>
-                  <td>
-                    <input 
-                      type="checkbox"
+                <TableRow key={applicant.id} hover>
+                  <TableCell padding="checkbox">
+                    <Checkbox
                       checked={selectedApplicants.includes(applicant.id)}
                       onChange={() => handleSelectApplicant(applicant.id)}
                     />
-                  </td>
-                  <td>{applicant.name}</td>
-                  <td>{applicant.uploadedAt.toLocaleDateString()}</td>
-                  <td>
-                    <span className="ai-score">{applicant.aiScore || t('applicants.noScore')}</span>
-                  </td>
-                  <td>
-                    <select 
-                      value={applicant.status}
-                      onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
-                      className={`status-select status-${applicant.status}`}
-                    >
-                      <option value="pending">{t('applicants.status.pending')}</option>
-                      <option value="reviewed">{t('applicants.status.reviewed')}</option>
-                      <option value="selected">{t('applicants.status.selected')}</option>
-                      <option value="rejected">{t('applicants.status.rejected')}</option>
-                    </select>
-                  </td>
-                  <td className="actions">
-                    <button className="btn btn-sm">{t('applicants.viewResume')}</button>
-                    {applicant.aiSummary && (
-                      <button className="btn btn-sm" title={applicant.aiSummary}>
-                        {t('applicants.aiSummary')}
-                      </button>
-                    )}
-                    <div className="email-actions">
-                      <button 
-                        className="btn btn-sm btn-success"
-                        onClick={() => handleSendEmail(applicant, 'interview')}
-                        title={t('email.sendInterview', '發送面試邀請')}
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                        <PersonIcon />
+                      </Avatar>
+                      <Typography variant="body2">{applicant.name}</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {applicant.uploadedAt.toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <AIIcon sx={{ mr: 0.5, color: 'primary.main', fontSize: '1rem' }} />
+                      <Chip
+                        label={applicant.aiScore || t('applicants.noScore')}
+                        color={
+                          applicant.aiScore 
+                            ? applicant.aiScore >= 80 ? 'success' 
+                            : applicant.aiScore >= 60 ? 'primary' 
+                            : 'warning'
+                            : 'default'
+                        }
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select
+                        value={applicant.status}
+                        onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
+                        variant="outlined"
                       >
-                        📧 {t('email.interview', '面試')}
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-warning"
-                        onClick={() => handleSendEmail(applicant, 'rejection')}
-                        title={t('email.sendRejection', '發送拒絕信')}
-                      >
-                        ❌ {t('email.reject', '拒絕')}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                        <MenuItem value="pending">{t('applicants.status.pending')}</MenuItem>
+                        <MenuItem value="reviewed">{t('applicants.status.reviewed')}</MenuItem>
+                        <MenuItem value="selected">{t('applicants.status.selected')}</MenuItem>
+                        <MenuItem value="rejected">{t('applicants.status.rejected')}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                      <Tooltip title={t('applicants.viewResume')}>
+                        <IconButton size="small" color="primary">
+                          <ViewIcon />
+                        </IconButton>
+                      </Tooltip>
+                      {applicant.aiSummary && (
+                        <Tooltip title={applicant.aiSummary}>
+                          <IconButton size="small" color="info">
+                            <AIIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title={t('email.sendInterview', '發送面試邀請')}>
+                        <IconButton 
+                          size="small" 
+                          color="success"
+                          onClick={() => handleSendEmail(applicant, 'interview')}
+                        >
+                          <InterviewIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={t('email.sendRejection', '發送拒絕信')}>
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => handleSendEmail(applicant, 'rejection')}  
+                        >
+                          <RejectIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-          {applicants.length === 0 && (
-            <div className="empty-state">
-              <p>{t('applicants.noApplicants')}</p>
-              <Link to={`/jobs/${job.id}/upload`} className="btn btn-primary btn-sm">
-                {t('applicants.uploadFirst')}
-              </Link>
-            </div>
-          )}
+        {/* Empty States */}
+        {applicants.length === 0 && (
+          <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+            <PersonIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              {t('applicants.noApplicants')}
+            </Typography>
+            <Button
+              variant="contained"
+              component={Link}
+              to={`/jobs/${job.id}/upload`}
+              startIcon={<UploadIcon />}
+            >
+              {t('applicants.uploadFirst')}
+            </Button>
+          </Paper>
+        )}
 
-          {applicants.length > 0 && filteredApplicants.length === 0 && (
-            <div className="empty-state">
-              <p>{t('applicants.noResults')}</p>
-              <button onClick={clearFilters} className="btn btn-secondary btn-sm">
-                {t('applicants.clearFilters')}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+        {applicants.length > 0 && filteredApplicants.length === 0 && (
+          <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+            <SearchIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              {t('applicants.noResults')}
+            </Typography>
+            <Button onClick={clearFilters} variant="outlined">
+              {t('applicants.clearFilters')}
+            </Button>
+          </Paper>
+        )}
+      </Paper>
 
       {/* Email Modal */}
       {emailModal.isOpen && emailModal.applicant && job && (
@@ -437,7 +600,7 @@ const JobDetailPage: React.FC = () => {
           emailType={emailModal.type}
         />
       )}
-    </div>
+    </Box>
   );
 };
 

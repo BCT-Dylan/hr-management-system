@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   TextField,
-  Grid,
   Alert,
   Snackbar,
   Fab,
@@ -72,89 +71,91 @@ const MaterialUIDemo: React.FC = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={4}>
-          {/* Form Demo */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" gutterBottom>
-                  表單範例
-                </Typography>
-                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="姓名"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <TextField
-                    fullWidth
-                    label="電子郵件"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <TextField
-                    fullWidth
-                    label="職位"
-                    value={formData.position}
-                    onChange={(e) => handleInputChange('position', e.target.value)}
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <Box sx={{ mt: 3 }}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      startIcon={<AddIcon />}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
+            {/* Form Demo */}
+            <Box sx={{ flex: 1 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    表單範例
+                  </Typography>
+                  <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+                    <TextField
                       fullWidth
-                    >
-                      提交申請
-                    </Button>
+                      label="姓名"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <TextField
+                      fullWidth
+                      label="電子郵件"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <TextField
+                      fullWidth
+                      label="職位"
+                      value={formData.position}
+                      onChange={(e) => handleInputChange('position', e.target.value)}
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <Box sx={{ mt: 3 }}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        fullWidth
+                      >
+                        提交申請
+                      </Button>
+                    </Box>
                   </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Box>
 
-          {/* Status Chips Demo */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" gutterBottom>
-                  狀態標籤
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                  <Chip label="待審核" color="warning" />
-                  <Chip label="已審核" color="info" />
-                  <Chip label="已選中" color="success" />
-                  <Chip label="已拒絕" color="error" />
-                  <Chip label="面試中" color="primary" />
-                </Box>
+            {/* Status Chips Demo */}
+            <Box sx={{ flex: 1 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    狀態標籤
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                    <Chip label="待審核" color="warning" />
+                    <Chip label="已審核" color="info" />
+                    <Chip label="已選中" color="success" />
+                    <Chip label="已拒絕" color="error" />
+                    <Chip label="面試中" color="primary" />
+                  </Box>
 
-                <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
-                  通知提醒
-                </Typography>
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  職缺建立成功！
-                </Alert>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  您有 3 位新的應徵者
-                </Alert>
-                <Alert severity="warning">
-                  請設定面試時間
-                </Alert>
-              </CardContent>
-            </Card>
-          </Grid>
+                  <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+                    通知提醒
+                  </Typography>
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    職缺建立成功！
+                  </Alert>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    您有 3 位新的應徵者
+                  </Alert>
+                  <Alert severity="warning">
+                    請設定面試時間
+                  </Alert>
+                </CardContent>
+              </Card>
+            </Box>
+          </Box>
 
           {/* List Demo */}
-          <Grid item xs={12}>
+          <Box>
             <Card>
               <CardContent>
                 <Typography variant="h5" gutterBottom>
@@ -204,8 +205,8 @@ const MaterialUIDemo: React.FC = () => {
                 </List>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Floating Action Button */}
         <Fab
