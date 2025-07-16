@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { JobPosting } from '../types';
-import { storageService } from '../services/storage';
+import { supabaseService } from '../services/supabaseService';
 
 const ResumeUploadPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +29,7 @@ const ResumeUploadPage: React.FC = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      const jobData = storageService.getJobById(jobId);
+      const jobData = await supabaseService.getJobById(jobId);
       setJob(jobData);
     } catch (error) {
       console.error('Load job data failed:', error);
@@ -85,7 +85,7 @@ const ResumeUploadPage: React.FC = () => {
       };
       
       // Create applicant record
-      storageService.createApplicant({
+      await supabaseService.createApplicant({
         name: formData.name,
         email: formData.email,
         jobPostingId: id!,

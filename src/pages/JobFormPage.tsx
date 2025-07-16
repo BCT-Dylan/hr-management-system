@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { storageService } from '../services/storage';
+import { supabaseService } from '../services/supabaseService';
 
 const JobFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +32,7 @@ const JobFormPage: React.FC = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      const job = storageService.getJobById(jobId);
+      const job = await supabaseService.getJobById(jobId);
       if (job) {
         setFormData({
           title: job.title,
@@ -84,7 +84,7 @@ const JobFormPage: React.FC = () => {
       };
 
       if (isEdit && id) {
-        const updatedJob = storageService.updateJob(id, jobData);
+        const updatedJob = await supabaseService.updateJob(id, jobData);
         if (updatedJob) {
           alert(t('jobs.updateSuccess'));
           navigate('/jobs');
@@ -92,7 +92,7 @@ const JobFormPage: React.FC = () => {
           alert(t('jobs.updateFailed'));
         }
       } else {
-        storageService.createJob(jobData);
+        await supabaseService.createJob(jobData);
         alert(t('jobs.createSuccess'));
         navigate('/jobs');
       }

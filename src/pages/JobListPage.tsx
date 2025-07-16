@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { JobPosting } from '../types';
-import { storageService } from '../services/storage';
+import { supabaseService } from '../services/supabaseService';
 
 const JobListPage: React.FC = () => {
   const { t } = useTranslation();
@@ -22,10 +22,8 @@ const JobListPage: React.FC = () => {
   const loadJobs = async () => {
     setLoading(true);
     try {
-      // Load jobs from storage
-      await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for UX
-      const storedJobs = storageService.getJobs();
-      setJobs(storedJobs);
+      const jobsData = await supabaseService.getJobs();
+      setJobs(jobsData);
     } catch (error) {
       console.error('Load jobs failed:', error);
     } finally {
@@ -36,7 +34,7 @@ const JobListPage: React.FC = () => {
   const handleDelete = async (jobId: string) => {
     if (window.confirm(t('jobs.deleteConfirm'))) {
       try {
-        const success = storageService.deleteJob(jobId);
+        const success = await supabaseService.deleteJob(jobId);
         if (success) {
           setJobs(jobs.filter(job => job.id !== jobId));
           alert(t('jobs.deleteSuccess'));

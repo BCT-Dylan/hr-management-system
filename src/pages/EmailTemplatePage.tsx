@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmailTemplate } from '../types';
-import { storageService } from '../services/storage';
+import { supabaseService } from '../services/supabaseService';
 
 const EmailTemplatePage: React.FC = () => {
   const { t } = useTranslation();
@@ -26,7 +26,7 @@ const EmailTemplatePage: React.FC = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      const templatesData = storageService.getTemplates();
+      const templatesData = await supabaseService.getTemplates();
       setTemplates(templatesData);
     } catch (error) {
       console.error('Load templates failed:', error);
@@ -49,7 +49,7 @@ const EmailTemplatePage: React.FC = () => {
       
       if (editingTemplate) {
         // Update existing template
-        const updatedTemplate = storageService.updateTemplate(editingTemplate.id, formData);
+        const updatedTemplate = await supabaseService.updateTemplate(editingTemplate.id, formData);
         if (updatedTemplate) {
           setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
           alert(t('emailTemplates.updateSuccess'));
@@ -58,7 +58,7 @@ const EmailTemplatePage: React.FC = () => {
         }
       } else {
         // Create new template
-        const newTemplate = storageService.createTemplate(formData);
+        const newTemplate = await supabaseService.createTemplate(formData);
         setTemplates(prev => [...prev, newTemplate]);
         alert(t('emailTemplates.createSuccess'));
       }
@@ -85,7 +85,7 @@ const EmailTemplatePage: React.FC = () => {
   const handleDelete = async (templateId: string) => {
     if (window.confirm(t('emailTemplates.deleteConfirm'))) {
       try {
-        const success = storageService.deleteTemplate(templateId);
+        const success = await supabaseService.deleteTemplate(templateId);
         if (success) {
           setTemplates(prev => prev.filter(t => t.id !== templateId));
           alert(t('emailTemplates.deleteSuccess'));

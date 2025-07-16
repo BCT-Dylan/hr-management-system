@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { JobPosting, Applicant } from '../types';
-import { storageService } from '../services/storage';
+import { supabaseService } from '../services/supabaseService';
 import EmailModal from '../components/EmailModal';
 
 const JobDetailPage: React.FC = () => {
@@ -34,10 +34,8 @@ const JobDetailPage: React.FC = () => {
   const loadJobAndApplicants = async (jobId: string) => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const jobData = storageService.getJobById(jobId);
-      const applicantsData = storageService.getApplicantsByJobId(jobId);
+      const jobData = await supabaseService.getJobById(jobId);
+      const applicantsData = await supabaseService.getApplicantsByJobId(jobId);
 
       setJob(jobData);
       setApplicants(applicantsData);
@@ -156,7 +154,7 @@ const JobDetailPage: React.FC = () => {
 
   const handleStatusChange = async (applicantId: string, newStatus: string) => {
     try {
-      const updatedApplicant = storageService.updateApplicant(applicantId, { 
+      const updatedApplicant = await supabaseService.updateApplicant(applicantId, { 
         status: newStatus as 'pending' | 'reviewed' | 'selected' | 'rejected' 
       });
       
@@ -185,7 +183,7 @@ const JobDetailPage: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Update applicant email status
-      const updatedApplicant = storageService.updateApplicant(emailModal.applicant!.id, { 
+      const updatedApplicant = await supabaseService.updateApplicant(emailModal.applicant!.id, { 
         emailSent: true,
         lastEmailType: emailData.type,
         lastEmailDate: new Date()
