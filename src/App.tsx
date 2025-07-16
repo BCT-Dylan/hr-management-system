@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import LoginPage from './pages/LoginPage';
@@ -11,7 +11,16 @@ import EmailTemplatePage from './pages/EmailTemplatePage';
 import Layout from './components/Layout';
 
 function App() {
-  const isAuthenticated = localStorage.getItem('hrToken');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('hrToken'));
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('hrToken'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return (
     <Router>

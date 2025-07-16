@@ -20,7 +20,8 @@ const LoginPage: React.FC = () => {
       
       if (username === 'hr' && password === 'password') {
         localStorage.setItem('hrToken', 'mock-token');
-        navigate('/jobs');
+        // Force page reload to trigger authentication check
+        window.location.href = '/jobs';
       } else {
         alert(t('auth.loginError'));
       }
@@ -36,7 +37,6 @@ const LoginPage: React.FC = () => {
       <div className="login-container">
         <div className="login-header">
           <h1>{t('auth.loginTitle')}</h1>
-          <LanguageSwitcher />
         </div>
         <form onSubmit={handleLogin} className="login-form">
           <div className="form-group">
@@ -66,6 +66,9 @@ const LoginPage: React.FC = () => {
         <div className="demo-info">
           <p>{t('auth.demoAccount')}: hr</p>
           <p>{t('auth.demoPassword')}: password</p>
+        </div>
+        <div className="language-switcher-bottom">
+          <LanguageSwitcher />
         </div>
       </div>
     </div>

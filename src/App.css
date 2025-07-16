@@ -167,6 +167,22 @@ body {
   color: #7f8c8d;
 }
 
+.language-switcher-bottom {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+}
+
+.language-switcher-bottom .language-switcher {
+  background: transparent;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
 /* Page Headers */
 .page-header {
   display: flex;
