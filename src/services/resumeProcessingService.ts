@@ -2,6 +2,7 @@ import { resumeParsingService } from './resumeParsingService';
 import { aiAnalysisService } from './aiAnalysisService';
 import { supabaseService } from './supabaseService';
 import { applicationStatusService } from './applicationStatusService';
+import { fileStorageService } from './fileStorageService';
 import { 
   ResumeProcessingResult, 
   AIAnalysisResult, 
@@ -69,8 +70,13 @@ class ResumeProcessingService {
         }
       }
 
-      // Step 3: Create initial applicant record with extracted info
-      console.log('Step 3: Creating applicant record...');
+      // Step 3: Store the original file
+      console.log('Step 3: Storing original file...');
+      const fileId = await fileStorageService.storeFile(file);
+      console.log('File stored with ID:', fileId);
+
+      // Step 4: Create initial applicant record with extracted info
+      console.log('Step 4: Creating applicant record...');
       
       // Get default status
       let defaultStatusId: string | undefined;
@@ -85,7 +91,7 @@ class ResumeProcessingService {
         name: applicantName,
         email: applicantEmail,
         jobPostingId: jobPosting.id,
-        resumeFile: `resume_${Date.now()}_${file.name}`, // In real app, upload to storage
+        resumeFile: fileId, // Store file ID for download
         resumeContent: parsingResult.content,
         resumeFileName: parsingResult.fileName,
         resumeFileSize: parsingResult.fileSize,
@@ -107,7 +113,7 @@ class ResumeProcessingService {
       const applicant = await supabaseService.createApplicant(initialApplicant);
       console.log('Applicant created successfully:', applicant.id);
 
-      // Step 4: AI Analysis (if enabled and configured)
+      // Step 5: AI Analysis (if enabled and configured)
       let analysisResult: AIAnalysisResult | undefined;
       
       console.log('AI Analysis Check:', {
@@ -129,8 +135,8 @@ class ResumeProcessingService {
 
           analysisResult = await aiAnalysisService.analyzeResume(analysisRequest);
 
-          // Step 5: Update applicant with AI analysis results
-          console.log('Step 5: Updating applicant with AI results...');
+          // Step 6: Update applicant with AI analysis results
+          console.log('Step 6: Updating applicant with AI results...');
           
           // Merge notes with AI analysis if notes were provided
           let finalAiSummary = analysisResult.analysis;
@@ -161,7 +167,7 @@ class ResumeProcessingService {
         }
       } else {
         // AI analysis not enabled or not configured
-        console.log('Step 4: Skipping AI analysis (disabled or not configured)');
+        console.log('Step 5: Skipping AI analysis (disabled or not configured)');
         
         // Still update with notes if provided
         let updateData: any = {
@@ -176,7 +182,7 @@ class ResumeProcessingService {
         await supabaseService.updateApplicant(applicant.id, updateData);
       }
 
-      // Step 6: Get final applicant data
+      // Step 7: Get final applicant data
       const finalApplicant = await supabaseService.getApplicantsByJobId(jobPosting.id);
       const updatedApplicant = finalApplicant.find(a => a.id === applicant.id);
 

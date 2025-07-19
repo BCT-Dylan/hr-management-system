@@ -26,10 +26,14 @@ import {
   Tooltip,
   Avatar,
   Breadcrumbs,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
-  Upload as UploadIcon,
   Person as PersonIcon,
   Email as EmailIcon,
   Visibility as ViewIcon,
@@ -38,16 +42,19 @@ import {
   FilterList as FilterIcon,
   CheckCircle as InterviewIcon,
   Cancel as RejectIcon,
+  Download as DownloadIcon,
+  Delete as DeleteIcon,
+  PictureAsPdf as PdfIcon,
+  Description as DocIcon,
 } from '@mui/icons-material';
 import { JobPosting, Applicant, ApplicationStatus } from '../types';
 import { supabaseService } from '../services/supabaseService';
 import { applicationStatusService } from '../services/applicationStatusService';
 import EmailModal from '../components/EmailModal';
 import ResumeUpload from '../components/ResumeUpload';
-import AIAnalysisDisplay from '../components/AIAnalysisDisplay';
 import ApplicantDetailDialog from '../components/ApplicantDetailDialog';
-import AIConfigTest from '../components/AIConfigTest';
-import AITestButton from '../components/AITestButton';
+import DevelopmentTools from '../components/DevelopmentTools';
+import { fileStorageService } from '../services/fileStorageService';
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,6 +78,11 @@ const JobDetailPage: React.FC = () => {
   }>({ isOpen: false, applicant: null, type: 'interview' });
   
   const [detailDialog, setDetailDialog] = useState<{
+    open: boolean;
+    applicant: Applicant | null;
+  }>({ open: false, applicant: null });
+  
+  const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     applicant: Applicant | null;
   }>({ open: false, applicant: null });
@@ -288,6 +300,83 @@ const JobDetailPage: React.FC = () => {
     setDetailDialog({ open: false, applicant: null });
   };
 
+  const handleDeleteApplicant = (applicant: Applicant) => {
+    setDeleteDialog({ open: true, applicant });
+  };
+
+  const confirmDeleteApplicant = async () => {
+    if (!deleteDialog.applicant) return;
+    
+    try {
+      const success = await supabaseService.deleteApplicant(deleteDialog.applicant.id);
+      if (success) {
+        setApplicants(prev => prev.filter(app => app.id !== deleteDialog.applicant!.id));
+        setDeleteDialog({ open: false, applicant: null });
+        // Refresh job data to update applicant count
+        if (id) loadJobAndApplicants(id);
+      } else {
+        alert('刪除失敗，請稍後再試');
+      }
+    } catch (error) {
+      console.error('Delete applicant failed:', error);
+      alert('刪除失敗，請稍後再試');
+    }
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialog({ open: false, applicant: null });
+  };
+
+  const handleDownloadResume = (applicant: Applicant) => {
+    try {
+      // Try to download original file first
+      if (applicant.resumeFile && fileStorageService.fileExists(applicant.resumeFile)) {
+        const success = fileStorageService.downloadFile(applicant.resumeFile);
+        if (success) {
+          return;
+        }
+      }
+      
+      // Fallback: create downloadable file from extracted content
+      if (applicant.resumeContent) {
+        const fileName = applicant.resumeFileName || `${applicant.name}_resume.txt`;
+        const fileContent = `履歷內容\n${'='.repeat(50)}\n\n應徵者：${applicant.name}\n電子郵件：${applicant.email}\n上傳時間：${applicant.uploadedAt.toLocaleString()}\n\n履歷內容：\n${applicant.resumeContent}`;
+        
+        // Create blob and download
+        const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName.replace(/\.[^/.]+$/, '.txt');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert(`履歷內容尚未解析，無法下載\n文件名：${applicant.resumeFileName || applicant.resumeFile}`);
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('下載失敗，請稍後再試');
+    }
+  };
+  
+  const handleViewResume = (applicant: Applicant) => {
+    // In a real application, this would open the resume file
+    // For now, we'll show the applicant detail dialog
+    handleViewDetail(applicant);
+  };
+  
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.toLowerCase().split('.').pop();
+    if (extension === 'pdf') {
+      return <PdfIcon sx={{ color: 'error.main' }} />;
+    } else if (extension === 'docx' || extension === 'doc') {
+      return <DocIcon sx={{ color: 'primary.main' }} />;
+    }
+    return <DocIcon sx={{ color: 'text.secondary' }} />;
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
@@ -326,11 +415,8 @@ const JobDetailPage: React.FC = () => {
         <Typography color="text.primary">{job.title}</Typography>
       </Breadcrumbs>
 
-      {/* AI Configuration Test */}
-      <AIConfigTest />
-      
-      {/* AI Connection Test */}
-      <AITestButton />
+      {/* Development Tools - Only visible in development environment */}
+      <DevelopmentTools />
 
       {/* Job Header */}
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -531,16 +617,23 @@ const JobDetailPage: React.FC = () => {
                 <TableCell>{t('applicants.tableHeaders.uploadTime')}</TableCell>
                 <TableCell align="center">{t('applicants.tableHeaders.aiScore')}</TableCell>
                 <TableCell>{t('applicants.tableHeaders.reviewStatus')}</TableCell>
+                <TableCell align="center">履歷檔案</TableCell>
                 <TableCell align="center">{t('applicants.tableHeaders.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredApplicants.map(applicant => (
-                <TableRow key={applicant.id} hover>
+                <TableRow 
+                  key={applicant.id} 
+                  hover
+                  onClick={() => handleViewDetail(applicant)}
+                  sx={{ cursor: 'pointer' }}
+                >
                   <TableCell padding="checkbox">
                     <Checkbox
                       checked={selectedApplicants.includes(applicant.id)}
                       onChange={() => handleSelectApplicant(applicant.id)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </TableCell>
                   <TableCell>
@@ -583,8 +676,23 @@ const JobDetailPage: React.FC = () => {
                       <Select
                         value={applicant.statusId || ''}
                         onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
-                        variant="outlined"
+                        onClick={(e) => e.stopPropagation()}
+                        variant="standard"
                         displayEmpty
+                        sx={{
+                          '& .MuiSelect-select': {
+                            padding: '8px 0px',
+                          },
+                          '& .MuiInput-underline:before': {
+                            display: 'none',
+                          },
+                          '& .MuiInput-underline:after': {
+                            display: 'none',
+                          },
+                          '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
+                            display: 'none',
+                          },
+                        }}
                         renderValue={(value) => {
                           if (!value) return <Typography variant="body2" color="text.secondary">未設定</Typography>;
                           const status = applicationStatuses.find(s => s.id === value);
@@ -633,19 +741,64 @@ const JobDetailPage: React.FC = () => {
                     </FormControl>
                   </TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-                      <Tooltip title={t('applicants.viewResume')}>
-                        <IconButton 
-                          size="small" 
-                          color="primary"
-                          onClick={() => handleViewDetail(applicant)}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px' }}>
+                          {getFileIcon(applicant.resumeFileName || applicant.resumeFile)}
+                        </Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontSize: '0.75rem', 
+                            maxWidth: '100px', 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            textAlign: 'left'
+                          }}
                         >
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
+                          {applicant.resumeFileName || applicant.resumeFile}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                        <Tooltip title="查看履歷">
+                          <IconButton 
+                            size="small" 
+                            color="primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewResume(applicant);
+                            }}
+                          >
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="下載履歷">
+                          <IconButton 
+                            size="small" 
+                            color="info"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadResume(applicant);
+                            }}
+                          >
+                            <DownloadIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                       {applicant.aiSummary && (
                         <Tooltip title={applicant.aiSummary}>
-                          <IconButton size="small" color="info">
+                          <IconButton 
+                            size="small" 
+                            color="info"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
                             <AIIcon />
                           </IconButton>
                         </Tooltip>
@@ -654,7 +807,10 @@ const JobDetailPage: React.FC = () => {
                         <IconButton 
                           size="small" 
                           color="success"
-                          onClick={() => handleSendEmail(applicant, 'interview')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendEmail(applicant, 'interview');
+                          }}
                         >
                           <InterviewIcon />
                         </IconButton>
@@ -663,9 +819,24 @@ const JobDetailPage: React.FC = () => {
                         <IconButton 
                           size="small" 
                           color="error"
-                          onClick={() => handleSendEmail(applicant, 'rejection')}  
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendEmail(applicant, 'rejection');
+                          }}  
                         >
                           <RejectIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="刪除履歷">
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteApplicant(applicant);
+                          }}
+                        >
+                          <DeleteIcon />
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -728,6 +899,33 @@ const JobDetailPage: React.FC = () => {
         onClose={closeDetailDialog}
         applicant={detailDialog.applicant}
       />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={closeDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          確認刪除履歷
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            您確定要刪除 <strong>{deleteDialog.applicant?.name}</strong> 的履歷嗎？
+            <br />
+            此操作無法復原，請謹慎操作。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="primary">
+            取消
+          </Button>
+          <Button onClick={confirmDeleteApplicant} color="error" variant="contained">
+            確認刪除
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

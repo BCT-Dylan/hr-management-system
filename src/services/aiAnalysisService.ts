@@ -10,6 +10,49 @@ import {
 class AIAnalysisService {
   private llm: ChatOpenAI;
 
+  /**
+   * Clean AI response to extract JSON content
+   */
+  private cleanJsonResponse(response: string): string {
+    // Remove markdown code blocks if present
+    let cleaned = response.trim();
+    
+    // Remove ```json at the beginning
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.slice(7);
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.slice(3);
+    }
+    
+    // Remove ``` at the end
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.slice(0, -3);
+    }
+    
+    // Find JSON object boundaries if there's extra text
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    return cleaned.trim();
+  }
+
+  /**
+   * Safe JSON parse with error handling
+   */
+  private safeJsonParse(jsonString: string, fallback: any = {}): any {
+    try {
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.error('JSON parse error:', error);
+      console.error('Failed to parse:', jsonString);
+      return fallback;
+    }
+  }
+
   constructor() {
     // Initialize OpenAI LLM
     const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
@@ -26,8 +69,8 @@ class AIAnalysisService {
     
     this.llm = new ChatOpenAI({
       model: 'gpt-3.5-turbo',
-      temperature: 0.3, // Increase temperature for more varied responses
-      apiKey: apiKey, // Use 'apiKey' instead of 'openAIApiKey' for newer versions
+      temperature: 0.3,
+      apiKey: apiKey,
     });
   }
 
@@ -37,7 +80,7 @@ class AIAnalysisService {
   async extractPersonalInfo(resumeContent: string): Promise<ExtractedInfo> {
     const extractionPrompt = PromptTemplate.fromTemplate(`
 作為履歷分析專家，請從以下履歷內容中準確提取個人資訊。
-請以 JSON 格式回應，包含所有能識別的資訊：
+請直接回應純 JSON 格式，不要使用 markdown 代碼塊包裝：
 
 履歷內容：
 {resumeContent}
@@ -56,8 +99,8 @@ class AIAnalysisService {
       "degree": "學歷程度",
       "major": "主修科系",
       "school": "學校名稱",
-      "graduation_year": 年份,
-      "gpa": GPA分數
+      "graduation_year": "年份",
+      "gpa": "GPA分數"
     }}
   ],
   "experience": [
@@ -81,14 +124,27 @@ class AIAnalysisService {
 - 語言程度請使用：basic, intermediate, advanced, native, professional
 - 日期格式盡量標準化（YYYY-MM-DD 或 YYYY-MM）
 - 技能請儘量識別技術技能和軟技能
+- 請直接返回純 JSON，不要使用 markdown 包裝
 `);
 
     try {
       const prompt = await extractionPrompt.format({ resumeContent });
       const response = await this.llm.invoke(prompt);
       
-      // Parse JSON response
-      const extractedData = JSON.parse(response.content as string);
+      // Clean and parse JSON response
+      const cleanedResponse = this.cleanJsonResponse(response.content as string);
+      console.log('Cleaned extraction response:', cleanedResponse);
+      const extractedData = this.safeJsonParse(cleanedResponse, {
+        name: undefined,
+        email: undefined,
+        phone: undefined,
+        location: undefined,
+        languages: [],
+        education: [],
+        experience: [],
+        skills: [],
+        summary: undefined,
+      });
       return extractedData as ExtractedInfo;
     } catch (error) {
       console.error('Personal info extraction failed:', error);
@@ -133,7 +189,7 @@ class AIAnalysisService {
 === 已提取的個人資訊 ===
 {extractedInfoText}
 
-請根據上述資訊進行詳細分析，並以 JSON 格式提供以下評估結果：
+請根據上述資訊進行詳細分析，並直接以純 JSON 格式提供以下評估結果（不要使用 markdown 代碼塊）：
 
 {{
   "matchPercentage": 數字(0-100),
@@ -156,8 +212,8 @@ class AIAnalysisService {
 }}
 
 評分考量原則：
-1. **嚴格評分**：分數應該真實反映匹配度，不要過於寬鬆
-2. **分數範圍說明**：
+1. 嚴格評分：分數應該真實反映匹配度，不要過於寬鬆
+2. 分數範圍說明：
    - 90-100%：完美匹配，所有條件都超出預期
    - 80-89%：高度匹配，大部分條件符合且有亮點
    - 70-79%：良好匹配，主要條件符合但有改善空間
@@ -165,20 +221,22 @@ class AIAnalysisService {
    - 50-59%：勉強匹配，少數條件符合，需要大幅改善
    - 0-49%：不匹配，大部分條件不符合
 
-3. **詳細評分計算**：
+3. 詳細評分計算：
    - 技術技能匹配度 × 權重
    - 經驗年資和領域相關性 × 權重  
    - 學歷背景符合度 × 權重
    - 語言能力滿足度 × 權重
    - 軟技能表現 × 權重
 
-4. **評分標準**：
+4. 評分標準：
    - 必需條件不符合應大幅扣分
    - 經驗不足應適當扣分
    - 技能不匹配應明顯扣分
    - 只有超出期望才能得到高分
 
 請確保分析客觀、嚴格，提供真實的匹配度評分。
+
+重要：請直接回應純 JSON 格式，不要使用 markdown 代碼塊包裝。
 `);
 
     try {
@@ -197,9 +255,19 @@ class AIAnalysisService {
       
       const response = await this.llm.invoke(prompt);
       console.log('AI Analysis - Received response from OpenAI');
-      console.log('Response content:', response.content);
+      console.log('Raw response content:', response.content);
       
-      const analysisResult = JSON.parse(response.content as string);
+      // Clean and parse JSON response
+      const cleanedResponse = this.cleanJsonResponse(response.content as string);
+      console.log('Cleaned analysis response:', cleanedResponse);
+      const analysisResult = this.safeJsonParse(cleanedResponse, {
+        matchPercentage: 0,
+        analysis: 'AI 分析解析失敗，建議人工審核',
+        strengths: ['履歷格式清晰'],
+        weaknesses: ['無法完成自動分析'],
+        recommendations: ['建議人工審核']
+      });
+
       console.log('AI Analysis - Parsed result:', {
         matchPercentage: analysisResult.matchPercentage,
         strengthsCount: analysisResult.strengths?.length,

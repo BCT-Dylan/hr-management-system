@@ -470,6 +470,21 @@ class SupabaseService {
     }
   }
 
+  async deleteApplicant(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('applicants')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting applicant:', error);
+      return false;
+    }
+  }
+
   // Email Template Management
   async getTemplates(): Promise<EmailTemplate[]> {
     try {
