@@ -1,7 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Switch,
+  FormControlLabel,
+  Stepper,
+  Step,
+  StepLabel,
+  Paper,
+  Alert,
+  CircularProgress,
+  Breadcrumbs,
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Work as WorkIcon,
+  Description as DescriptionIcon,
+  Save as SaveIcon,
+} from '@mui/icons-material';
 import { supabaseService } from '../services/supabaseService';
+import { ScoringCriteria } from '../types';
+import ScoringCriteriaEditor from '../components/ScoringCriteriaEditor';
 
 const JobFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,11 +44,42 @@ const JobFormPage: React.FC = () => {
     location: '',
     jobType: 'fullTime',
     description: '',
-    isPublic: true
+    jobDescriptionDetail: '', // New: Detailed JD for AI
+    isPublic: true,
+    aiAnalysisEnabled: true, // New: Enable AI analysis
   });
-  const [attachments, setAttachments] = useState<File[]>([]);
+  
+  const [scoringCriteria, setScoringCriteria] = useState<ScoringCriteria>({
+    technical_skills: {
+      weight: 30,
+      required_skills: [],
+      preferred_skills: []
+    },
+    experience: {
+      weight: 25,
+      min_years: 0,
+      preferred_domains: []
+    },
+    education: {
+      weight: 20,
+      min_degree: 'bachelor',
+      preferred_majors: []
+    },
+    languages: {
+      weight: 15,
+      required_languages: ['Chinese', 'English']
+    },
+    soft_skills: {
+      weight: 10,
+      preferred_skills: []
+    }
+  });
+  
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEdit);
+  const [activeStep, setActiveStep] = useState(0);
+  
+  const steps = ['基本資訊', 'Job Description', 'AI 評分標準'];
 
   useEffect(() => {
     if (isEdit && id) {
@@ -40,8 +100,15 @@ const JobFormPage: React.FC = () => {
           location: job.location,
           jobType: job.jobType,
           description: job.description,
-          isPublic: job.isPublic
+          jobDescriptionDetail: job.jobDescriptionDetail || '',
+          isPublic: job.isPublic,
+          aiAnalysisEnabled: job.aiAnalysisEnabled ?? true,
         });
+        
+        // Load scoring criteria if exists
+        if (job.scoringCriteria) {
+          setScoringCriteria(job.scoringCriteria);
+        }
       } else {
         alert(t('jobs.notFound'));
         navigate('/jobs');
@@ -65,10 +132,13 @@ const JobFormPage: React.FC = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachments(Array.from(e.target.files));
-    }
+
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,7 +150,7 @@ const JobFormPage: React.FC = () => {
       
       const jobData = {
         ...formData,
-        attachments: attachments.map(file => file.name) // In real app, upload files first
+        scoringCriteria
       };
 
       if (isEdit && id) {
@@ -105,127 +175,219 @@ const JobFormPage: React.FC = () => {
   };
 
   if (loadingData) {
-    return <div className="loading">{t('common.loading')}</div>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  return (
-    <div className="job-form-page">
-      <div className="page-header">
-        <Link to="/jobs" className="back-link">← {t('common.back')} {t('jobs.jobList')}</Link>
-        <h1>{isEdit ? t('jobs.editJob') : t('jobs.addJob')}</h1>
-      </div>
+  const renderBasicInfo = () => (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <WorkIcon sx={{ mr: 1 }} />
+          基本職缺資訊
+        </Typography>
+        
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 3 }}>
+          <TextField
+            fullWidth
+            label={`${t('jobs.jobName')} *`}
+            name="title"
+            value={formData.title}
+            onChange={handleInputChange}
+            required
+          />
+          <TextField
+            fullWidth
+            label={`${t('jobs.department')} *`}
+            name="department"
+            value={formData.department}
+            onChange={handleInputChange}
+            required
+          />
+        </Box>
 
-      <form onSubmit={handleSubmit} className="job-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="title">{t('jobs.jobName')} *</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="department">{t('jobs.department')} *</label>
-            <input
-              type="text"
-              id="department"
-              name="department"
-              value={formData.department}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="location">{t('jobs.location')} *</label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="jobType">{t('jobs.jobType')} *</label>
-            <select
-              id="jobType"
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 3 }}>
+          <TextField
+            fullWidth
+            label={`${t('jobs.location')} *`}
+            name="location"
+            value={formData.location}
+            onChange={handleInputChange}
+            required
+          />
+          <FormControl fullWidth>
+            <InputLabel>{t('jobs.jobType')} *</InputLabel>
+            <Select
               name="jobType"
               value={formData.jobType}
-              onChange={handleInputChange}
-              required
+              label={`${t('jobs.jobType')} *`}
+              onChange={(e) => setFormData(prev => ({ ...prev, jobType: e.target.value }))}
             >
-              <option value="fullTime">{t('jobs.jobTypes.fullTime')}</option>
-              <option value="partTime">{t('jobs.jobTypes.partTime')}</option>
-              <option value="contract">{t('jobs.jobTypes.contract')}</option>
-              <option value="internship">{t('jobs.jobTypes.internship')}</option>
-            </select>
-          </div>
-        </div>
+              <MenuItem value="fullTime">{t('jobs.jobTypes.fullTime')}</MenuItem>
+              <MenuItem value="partTime">{t('jobs.jobTypes.partTime')}</MenuItem>
+              <MenuItem value="contract">{t('jobs.jobTypes.contract')}</MenuItem>
+              <MenuItem value="internship">{t('jobs.jobTypes.internship')}</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
-        <div className="form-group">
-          <label htmlFor="description">{t('jobs.description')} *</label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            rows={6}
-            required
-            placeholder={t('jobs.description')}
-          />
-        </div>
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label={`${t('jobs.description')} *`}
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          required
+          sx={{ mb: 3 }}
+        />
 
-        <div className="form-group">
-          <label htmlFor="attachments">{t('jobs.attachments')}</label>
-          <input
-            type="file"
-            id="attachments"
-            multiple
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx"
-          />
-          <small className="form-help">{t('jobs.attachmentsHelper')}</small>
-          {attachments.length > 0 && (
-            <div className="file-list">
-              {attachments.map((file, index) => (
-                <div key={index} className="file-item">
-                  {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="isPublic"
+        <FormControlLabel
+          control={
+            <Switch
               checked={formData.isPublic}
-              onChange={handleInputChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
+              name="isPublic"
             />
-            {t('jobs.isPublic')} ({t('jobs.isPublicHelper')})
-          </label>
-        </div>
+          }
+          label={`${t('jobs.isPublic')} (${t('jobs.isPublicHelper')})`}
+        />
+      </CardContent>
+    </Card>
+  );
 
-        <div className="form-actions">
-          <Link to="/jobs" className="btn btn-secondary">{t('common.cancel')}</Link>
-          <button type="submit" disabled={loading} className="btn btn-primary">
-            {loading ? (isEdit ? t('jobs.updating', '更新中...') : t('jobs.creating', '建立中...')) : (isEdit ? t('jobs.updateJob', '更新職缺') : t('jobs.createJob', '建立職缺'))}
-          </button>
-        </div>
-      </form>
-    </div>
+  const renderJobDescription = () => (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <DescriptionIcon sx={{ mr: 1 }} />
+          詳細 Job Description
+        </Typography>
+        
+        <Alert severity="info" sx={{ mb: 3 }}>
+          此詳細描述將用於 AI 履歷分析，請提供完整的職位要求、技能需求和工作內容描述。
+        </Alert>
+
+        <TextField
+          fullWidth
+          multiline
+          rows={12}
+          label="詳細 Job Description (用於 AI 分析)"
+          name="jobDescriptionDetail"
+          value={formData.jobDescriptionDetail}
+          onChange={handleInputChange}
+          placeholder="請描述詳細的職位要求，包括：
+• 主要工作職責和內容
+• 必需的技術技能和工具
+• 學歷和經驗要求
+• 語言能力要求
+• 軟技能要求
+• 工作環境和團隊描述
+• 發展機會和福利待遇
+
+這些資訊將幫助 AI 更準確地評估應徵者的適配度。"
+          sx={{ mb: 3 }}
+        />
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.aiAnalysisEnabled}
+              onChange={(e) => setFormData(prev => ({ ...prev, aiAnalysisEnabled: e.target.checked }))}
+              name="aiAnalysisEnabled"
+            />
+          }
+          label="啟用 AI 履歷分析功能"
+        />
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <Box>
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Button
+          component={Link}
+          to="/jobs"
+          startIcon={<ArrowBackIcon />}
+          color="inherit"
+        >
+          {t('jobs.jobList')}
+        </Button>
+        <Typography color="text.primary">
+          {isEdit ? t('jobs.editJob') : t('jobs.addJob')}
+        </Typography>
+      </Breadcrumbs>
+
+      {/* Header */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          {isEdit ? t('jobs.editJob') : t('jobs.addJob')}
+        </Typography>
+      </Paper>
+
+      {/* Stepper */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Stepper activeStep={activeStep} alternativeLabel>
+          {steps.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+      </Paper>
+
+      {/* Form Content */}
+      <Box component="form" onSubmit={handleSubmit}>
+        {activeStep === 0 && renderBasicInfo()}
+        {activeStep === 1 && renderJobDescription()}
+        {activeStep === 2 && <ScoringCriteriaEditor 
+          scoringCriteria={scoringCriteria}
+          onChange={setScoringCriteria}
+        />}
+
+        {/* Navigation Buttons */}
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+            >
+              上一步
+            </Button>
+            <Box>
+              {activeStep < steps.length - 1 && (
+                <Button
+                  variant="contained"
+                  onClick={handleNext}
+                  sx={{ mr: 1 }}
+                >
+                  下一步
+                </Button>
+              )}
+              {activeStep === steps.length - 1 && (
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={loading}
+                  startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+                >
+                  {loading 
+                    ? (isEdit ? '更新中...' : '建立中...') 
+                    : (isEdit ? '更新職缺' : '建立職缺')
+                  }
+                </Button>
+              )}
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
+    </Box>
   );
 };
 

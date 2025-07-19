@@ -39,9 +39,15 @@ import {
   CheckCircle as InterviewIcon,
   Cancel as RejectIcon,
 } from '@mui/icons-material';
-import { JobPosting, Applicant } from '../types';
+import { JobPosting, Applicant, ApplicationStatus } from '../types';
 import { supabaseService } from '../services/supabaseService';
+import { applicationStatusService } from '../services/applicationStatusService';
 import EmailModal from '../components/EmailModal';
+import ResumeUpload from '../components/ResumeUpload';
+import AIAnalysisDisplay from '../components/AIAnalysisDisplay';
+import ApplicantDetailDialog from '../components/ApplicantDetailDialog';
+import AIConfigTest from '../components/AIConfigTest';
+import AITestButton from '../components/AITestButton';
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +56,7 @@ const JobDetailPage: React.FC = () => {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [applicationStatuses, setApplicationStatuses] = useState<ApplicationStatus[]>([]);
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
@@ -62,12 +69,27 @@ const JobDetailPage: React.FC = () => {
     applicant: Applicant | null;
     type: 'interview' | 'rejection';
   }>({ isOpen: false, applicant: null, type: 'interview' });
+  
+  const [detailDialog, setDetailDialog] = useState<{
+    open: boolean;
+    applicant: Applicant | null;
+  }>({ open: false, applicant: null });
 
   useEffect(() => {
     if (id) {
       loadJobAndApplicants(id);
     }
+    loadApplicationStatuses();
   }, [id]);
+
+  const loadApplicationStatuses = async () => {
+    try {
+      const statuses = await applicationStatusService.getActiveStatuses();
+      setApplicationStatuses(statuses);
+    } catch (error) {
+      console.error('Failed to load application statuses:', error);
+    }
+  };
 
   const loadJobAndApplicants = async (jobId: string) => {
     setLoading(true);
@@ -142,11 +164,12 @@ const JobDetailPage: React.FC = () => {
     // AI Score filter
     if (filters.aiScore !== 'all') {
       filteredApplicants = filteredApplicants.filter(applicant => {
-        if (!applicant.aiScore) return filters.aiScore === 'no-score';
-        if (filters.aiScore === 'high') return applicant.aiScore >= 80;
-        if (filters.aiScore === 'medium') return applicant.aiScore >= 60 && applicant.aiScore < 80;
-        if (filters.aiScore === 'low') return applicant.aiScore < 60;
-        if (filters.aiScore === 'no-score') return !applicant.aiScore;
+        const score = applicant.matchPercentage || applicant.aiScore;
+        if (!score) return filters.aiScore === 'no-score';
+        if (filters.aiScore === 'high') return score >= 80;
+        if (filters.aiScore === 'medium') return score >= 60 && score < 80;
+        if (filters.aiScore === 'low') return score < 60;
+        if (filters.aiScore === 'no-score') return !score;
         return true;
       });
     }
@@ -190,16 +213,28 @@ const JobDetailPage: React.FC = () => {
     alert(t('applicants.prepareEmail', '準備發送信件給 {{count}} 位應徵者', { count: selectedApplicants.length }));
   };
 
-  const handleStatusChange = async (applicantId: string, newStatus: string) => {
+  const handleStatusChange = async (applicantId: string, newStatusId: string) => {
     try {
+      // Find the status name from the ID
+      const selectedStatus = applicationStatuses.find(s => s.id === newStatusId);
+      if (!selectedStatus) {
+        console.error('Status not found:', newStatusId);
+        return;
+      }
+
       const updatedApplicant = await supabaseService.updateApplicant(applicantId, { 
-        status: newStatus as 'pending' | 'reviewed' | 'selected' | 'rejected' 
+        status: selectedStatus.name,
+        statusId: newStatusId
       });
       
       if (updatedApplicant) {
         setApplicants(prev => 
           prev.map(app => 
-            app.id === applicantId ? { ...app, status: newStatus as any } : app
+            app.id === applicantId ? { 
+              ...app, 
+              status: selectedStatus.name,
+              statusId: newStatusId 
+            } : app
           )
         );
       } else {
@@ -245,6 +280,14 @@ const JobDetailPage: React.FC = () => {
     setEmailModal({ isOpen: false, applicant: null, type: 'interview' });
   };
 
+  const handleViewDetail = (applicant: Applicant) => {
+    setDetailDialog({ open: true, applicant });
+  };
+
+  const closeDetailDialog = () => {
+    setDetailDialog({ open: false, applicant: null });
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
@@ -283,6 +326,12 @@ const JobDetailPage: React.FC = () => {
         <Typography color="text.primary">{job.title}</Typography>
       </Breadcrumbs>
 
+      {/* AI Configuration Test */}
+      <AIConfigTest />
+      
+      {/* AI Connection Test */}
+      <AITestButton />
+
       {/* Job Header */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -300,14 +349,18 @@ const JobDetailPage: React.FC = () => {
               />
             </Box>
           </Box>
-          <Button
-            variant="contained"
-            component={Link}
-            to={`/jobs/${job.id}/upload`}
-            startIcon={<UploadIcon />}
-          >
-            {t('resumeUpload.title')}
-          </Button>
+          <ResumeUpload 
+            jobPosting={job} 
+            onSuccess={(applicant) => {
+              setApplicants(prev => [...prev, applicant]);
+              // Refresh job data to update applicant count
+              loadJobAndApplicants(job.id);
+            }}
+            onError={(error) => {
+              console.error('Resume upload failed:', error);
+              alert(`履歷上傳失敗: ${error}`);
+            }}
+          />
         </Box>
       </Paper>
 
@@ -356,10 +409,26 @@ const JobDetailPage: React.FC = () => {
                     onChange={(e) => handleFilterChange('status', e.target.value)}
                   >
                     <MenuItem value="all">{t('applicants.status.all', '全部狀態')}</MenuItem>
-                    <MenuItem value="pending">{t('applicants.status.pending')}</MenuItem>
-                    <MenuItem value="reviewed">{t('applicants.status.reviewed')}</MenuItem>
-                    <MenuItem value="selected">{t('applicants.status.selected')}</MenuItem>
-                    <MenuItem value="rejected">{t('applicants.status.rejected')}</MenuItem>
+                    {applicationStatuses.map(status => (
+                      <MenuItem key={status.id} value={status.name}>
+                        <Box
+                          sx={{
+                            backgroundColor: status.color,
+                            color: '#fff',
+                            borderRadius: '12px',
+                            px: 1.5,
+                            py: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 500,
+                            display: 'inline-block',
+                            minWidth: '60px',
+                            textAlign: 'center',
+                          }}
+                        >
+                          {status.displayName}
+                        </Box>
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Box>
@@ -490,38 +559,87 @@ const JobDetailPage: React.FC = () => {
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <AIIcon sx={{ mr: 0.5, color: 'primary.main', fontSize: '1rem' }} />
-                      <Chip
-                        label={applicant.aiScore || t('applicants.noScore')}
-                        color={
-                          applicant.aiScore 
-                            ? applicant.aiScore >= 80 ? 'success' 
-                            : applicant.aiScore >= 60 ? 'primary' 
-                            : 'warning'
-                            : 'default'
-                        }
-                        size="small"
-                        variant="outlined"
-                      />
+                      {(() => {
+                        const score = applicant.matchPercentage || applicant.aiScore;
+                        return (
+                          <Chip
+                            label={score ? `${score}%` : t('applicants.noScore')}
+                            color={
+                              score 
+                                ? score >= 80 ? 'success' 
+                                : score >= 60 ? 'primary' 
+                                : 'warning'
+                                : 'default'
+                            }
+                            size="small"
+                            variant="outlined"
+                          />
+                        );
+                      })()}
                     </Box>
                   </TableCell>
                   <TableCell>
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                       <Select
-                        value={applicant.status}
+                        value={applicant.statusId || ''}
                         onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
                         variant="outlined"
+                        displayEmpty
+                        renderValue={(value) => {
+                          if (!value) return <Typography variant="body2" color="text.secondary">未設定</Typography>;
+                          const status = applicationStatuses.find(s => s.id === value);
+                          if (!status) return <Typography variant="body2" color="text.secondary">未知狀態</Typography>;
+                          return (
+                            <Box
+                              sx={{
+                                backgroundColor: status.color,
+                                color: '#fff',
+                                borderRadius: '12px',
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                display: 'inline-block',
+                                minWidth: '60px',
+                                textAlign: 'center',
+                              }}
+                            >
+                              {status.displayName}
+                            </Box>
+                          );
+                        }}
                       >
-                        <MenuItem value="pending">{t('applicants.status.pending')}</MenuItem>
-                        <MenuItem value="reviewed">{t('applicants.status.reviewed')}</MenuItem>
-                        <MenuItem value="selected">{t('applicants.status.selected')}</MenuItem>
-                        <MenuItem value="rejected">{t('applicants.status.rejected')}</MenuItem>
+                        {applicationStatuses.map(status => (
+                          <MenuItem key={status.id} value={status.id}>
+                            <Box
+                              sx={{
+                                backgroundColor: status.color,
+                                color: '#fff',
+                                borderRadius: '12px',
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                display: 'inline-block',
+                                minWidth: '70px',
+                                textAlign: 'center',
+                              }}
+                            >
+                              {status.displayName}
+                            </Box>
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </TableCell>
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                       <Tooltip title={t('applicants.viewResume')}>
-                        <IconButton size="small" color="primary">
+                        <IconButton 
+                          size="small" 
+                          color="primary"
+                          onClick={() => handleViewDetail(applicant)}
+                        >
                           <ViewIcon />
                         </IconButton>
                       </Tooltip>
@@ -565,14 +683,17 @@ const JobDetailPage: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               {t('applicants.noApplicants')}
             </Typography>
-            <Button
-              variant="contained"
-              component={Link}
-              to={`/jobs/${job.id}/upload`}
-              startIcon={<UploadIcon />}
-            >
-              {t('applicants.uploadFirst')}
-            </Button>
+            <ResumeUpload 
+              jobPosting={job} 
+              onSuccess={(applicant) => {
+                setApplicants([applicant]);
+                loadJobAndApplicants(job.id);
+              }}
+              onError={(error) => {
+                console.error('Resume upload failed:', error);
+                alert(`履歷上傳失敗: ${error}`);
+              }}
+            />
           </Paper>
         )}
 
@@ -600,6 +721,13 @@ const JobDetailPage: React.FC = () => {
           emailType={emailModal.type}
         />
       )}
+
+      {/* Applicant Detail Dialog */}
+      <ApplicantDetailDialog
+        open={detailDialog.open}
+        onClose={closeDetailDialog}
+        applicant={detailDialog.applicant}
+      />
     </Box>
   );
 };

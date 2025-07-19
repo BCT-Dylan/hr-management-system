@@ -14,6 +14,7 @@ import {
 import {
   Work as WorkIcon,
   Email as EmailIcon,
+  Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
 } from '@mui/icons-material';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -31,12 +32,14 @@ const Layout: React.FC = () => {
   const getCurrentTab = () => {
     if (location.pathname.startsWith('/jobs')) return 0;
     if (location.pathname.startsWith('/templates')) return 1;
+    if (location.pathname.startsWith('/status-management')) return 2;
     return 0;
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     if (newValue === 0) navigate('/jobs');
     if (newValue === 1) navigate('/templates');
+    if (newValue === 2) navigate('/status-management');
   };
 
   return (
@@ -75,6 +78,11 @@ const Layout: React.FC = () => {
           <Tab
             icon={<EmailIcon />}
             label={t('navigation.emailTemplates')}
+            sx={{ color: 'white' }}
+          />
+          <Tab
+            icon={<SettingsIcon />}
+            label="狀態管理"
             sx={{ color: 'white' }}
           />
         </Tabs>

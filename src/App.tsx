@@ -11,6 +11,7 @@ import JobFormPage from './pages/JobFormPage';
 import FilterSettingPage from './pages/FilterSettingPage';
 import ResumeUploadPage from './pages/ResumeUploadPage';
 import EmailTemplatePage from './pages/EmailTemplatePage';
+import ApplicationStatusPage from './pages/ApplicationStatusPage';
 import Layout from './components/Layout';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="jobs/:id/filter" element={<FilterSettingPage />} />
             <Route path="jobs/:id/upload" element={<ResumeUploadPage />} />
             <Route path="templates" element={<EmailTemplatePage />} />
+            <Route path="status-management" element={<ApplicationStatusPage />} />
           </Route>
         </Routes>
         </div>
